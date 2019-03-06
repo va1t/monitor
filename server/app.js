@@ -35,7 +35,8 @@ let watcher = mysqlEventWatcher.add(
         //row updated
        if (oldRow !== null && newRow !== null) {
          //update code goes here
-         console.log('update happened', oldRow, newRow)
+         io.sockets.emit('0', newRow.fields)
+         console.log('update happened', newRow)
        }
    
        //detailed event information
