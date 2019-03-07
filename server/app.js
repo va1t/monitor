@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true })) // support encoded bodies
 let mysqlEventWatcher = MySQLEvents({
     host: 'localhost',
     user: 'root',
-    password: 'Unitybank12%'
+    password: '123456'
 })
 
 let watcher = mysqlEventWatcher.add(
@@ -35,7 +35,7 @@ let watcher = mysqlEventWatcher.add(
         //row updated
        if (oldRow !== null && newRow !== null) {
          //update code goes here
-         io.sockets.emit('0', newRow.fields)
+         io.sockets.emit(newRow.fields.uid, newRow.fields)
          console.log('update happened', newRow)
        }
    
@@ -49,7 +49,7 @@ let watcher = mysqlEventWatcher.add(
 let connection = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
-    password : 'Unitybank12%',
+    password : '123456',
     database : 'monitor'
 })
 
@@ -68,32 +68,25 @@ let update_node = (data) => {
 
 // routes will go here
 app.post('/update_node', function(req, res) {
-    console.log(req.body)
-
-    req.body.address.Ethernet.forEach(element => {
-        console.log(element)
-    })
-
-    for(key in req.body.address) {
-        req.body.address[key].forEach(e => {
-            console.log(e)
-        })
-    }
+    console.log(JSON.stringify(req.body,null,2))
 
     values = {
-        id : 0,
-        memory : req.body.memory[2],
-        disk : req.body.disk[3],
-        battery : req.body.battery[0],
-        user : req.body.user[0][0],
+        id : req.body.id,
+        ip : req.body.network.ip,
+        memory : req.body.memory.percent,
+        disk : req.body.disk.percent,
+        user : req.body.user,
+        battery : req.body.battery,
+        uid : req.body.uid
     }
-    console.log(values)
+
+    console.log(JSON.stringify(values,null,2))
 
     connection.query('SELECT * FROM nodes WHERE id = ?', values.id, (err, results) => {
         if(err) console.log(err)
         else {
             if(results.length >= 1) {
-                connection.query('UPDATE nodes SET memory = ?, disk = ?, battery = ?, user = ? WHERE id = ?', [values.memory, values.disk, values.battery, values.user, values.id], (err, results) => {
+                connection.query('UPDATE nodes SET memory = ?, disk = ?, battery = ?, user = ?, ip = ?, uid = ? WHERE id = ?', [values.memory, values.disk, values.battery, values.user, values.ip, values.uid, values.id], (err, results) => {
                     if(err) throw err;
                     else {
                         console.log('UPDATE Node Results: ', results);
@@ -117,8 +110,22 @@ app.post('/update_node', function(req, res) {
 
 // Socket IO Stuff
 io.on('connection', (socket) => {
+
     console.log('Web Client Connected!')
+
+    socket.on('get_nodes', (data) => {
+        console.log(data)
+        connection.query('SELECT * FROM nodes WHERE uid = ?', data.googleId, (err, results) => {
+            console.log(data.googleId)
+            if(err) console.log(err)
+            else {
+                console.log(results)
+                socket.emit(data.googleId, results)
+            }
+        })
+    })    
 })
+
 
 // start the server
 http.listen(port, () => {
