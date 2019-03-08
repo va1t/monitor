@@ -4,10 +4,16 @@ import threading
 import datetime
 import time
 
-URL = "http://localhost:3001/update_node"
+URL = "http://10.62.207.147:3001/update_node"
 
 def update_node():
     threading.Timer(1.0, update_node).start()
+    
+    network = psutil.net_if_addrs()
+    network_array = []
+    for key in network:
+        network_array.append(network[key])
+
     data = {
         "cpu": {
             "percent" : psutil.cpu_percent(interval=None, percpu=True),
@@ -22,11 +28,11 @@ def update_node():
             "percent" : psutil.virtual_memory()[2],
             "used" : psutil.virtual_memory()[3]
         },
-        "id" : psutil.net_if_addrs()['Ethernet'][0][1],
+        "id" : network_array[0][0][1],
         "network" : {
-            "ip" : psutil.net_if_addrs()['Ethernet'][1][1],
-            "mac" : psutil.net_if_addrs()['Ethernet'][0][1],
-            "stats" : psutil.net_if_stats()
+            "ip" : network_array[0][1][1],
+            "mac" : network_array[0][0][1],
+            "stats" : network
         },
         "disk": {
             "total" : psutil.disk_usage('/')[0],
@@ -41,10 +47,10 @@ def update_node():
         data["battery_percent"] = 'None'
     else:
         data["battery_percent"] = psutil.sensors_battery()[0]
+    
 
     r = requests.post(URL, json=data)
     ts = time.time()
     print(datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S') + ': ' + str(r))
 
-# update_node()
 update_node()

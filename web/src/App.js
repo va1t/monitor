@@ -10,21 +10,15 @@ class App extends Component {
     this.state = {
       nodes: [
         {
-          id: '1',
-          battery: 0,
-          disk: 0,
-          memory: 0,
-          user: 'pmaxcy',
-          ip: '12.25.25.25'
+          id: undefined,
+          battery: undefined,
+          disk: undefined,
+          memory: undefined,
+          user: undefined,
+          ip: undefined
         }
       ]
     }
-    this.listNodes = this.state.nodes.map((node) => {
-      console.log('test')
-      return(
-        <li key={node.id}>Node: {node.id} Battery: {node.battery} {node.battery === 'None' ? '' : '%'} Disk: {node.disk} Memory: {node.memory}% User: {node.user} IP: {node.ip}</li>
-      )
-    })
   }
 
   componentDidMount() {
@@ -45,7 +39,6 @@ class App extends Component {
       })
 
       socket.on(response.googleId, (data) => {
-        console.log('Recieved: ' + data)
         
         this.setState({
          nodes : data
@@ -71,11 +64,13 @@ class App extends Component {
         <header className="App-header">
           { this.state.userId ? this.renderLogin() : this.renderLogin()}
           Node Test <br />
-          <div>
-            <ul>
-              {this.listNodes}
-            </ul>
-          </div>
+          <ul>
+            {
+              this.state.nodes.map(node => {
+                return <li key={node.id} style={{'list-style': 'none'}}> Node: {node.id} {node.battery === null || node.battery === undefined ? '' : 'Battery:'} {node.battery} {node.battery === null || node.battery === undefined ? '' : '%'} Disk: {node.disk} Memory: {node.memory}% User: {node.user} IP: {node.ip}</li>
+              })
+            }
+          </ul>
         </header>
       </div>
     );
