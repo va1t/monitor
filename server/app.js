@@ -21,6 +21,14 @@ let connection = mysql.createConnection({
     database : 'monitor'
 })
 
+let connected_clients = {
+
+}
+
+let connected_sockets = {
+
+}
+
 connection.connect( (err) => {
     if (err) {
         console.error(err.stack);
@@ -56,8 +64,13 @@ app.post('/update_node', function(req, res) {
                         connection.query('SELECT * FROM nodes WHERE uid = ?', values.uid, (err, results) => {
                             if(err) console.log(err)
                             else {
-                                console.log("[UPDATE Node] ", values.id, ' : ', values.uid)
-                                io.emit(values.uid, results)                              
+                                console.log("[UPDATE Node] ", values.id, ' : ', values.uid, '|', Object.keys(connected_clients).length, ':', Object.keys(connected_sockets).length)
+                                if(connected_clients.hasOwnProperty(values.uid)){
+                                    connected_clients[values.uid].forEach(element => {
+                                        console.log(element.id)
+                                        element.emit(values.uid, results)    
+                                    })
+                                }                        
                             }
                         })
                     }
@@ -70,7 +83,11 @@ app.post('/update_node', function(req, res) {
                             if(err) console.log(err)
                             else {
                                 console.log("[INSERT Node] ", values.id, ' : ', values.uid)
-                                io.emit(values.uid, results)                              
+                                if(connected_clients.hasOwnProperty(values.uid)){
+                                    connected_clients[values.uid].forEach(element => {
+                                        element.emit(values.uid, results)    
+                                    }) 
+                                }                          
                             }
                         })
                     }
@@ -88,14 +105,47 @@ io.on('connection', (socket) => {
 
     console.log('Web Client Connected!')
 
-    socket.on('get_nodes', (data) => {
+    socket.emit('connected', () => {
+
+    })
+
+    socket.on('login', (data) => {
+        
+        if(!connected_clients.hasOwnProperty(data.googleId)) {
+            connected_clients[data.googleId] = []
+        }
+
+        connected_clients[data.googleId].push(socket)
+        connected_sockets[socket.id] = data.googleId
+
         connection.query('SELECT * FROM nodes WHERE uid = ?', data.googleId, (err, results) => {
             if(err) console.log(err)
             else {
-                io.emit(data.googleId, results)
+                socket.emit(data.googleId, results)
             }
         })
-    })    
+    })   
+    
+    socket.on('disconnect', () => {
+        console.log('Web Client Disconnected!')
+        if(connected_clients[connected_sockets[socket.id]].length <= 1 ) {
+            delete connected_clients[connected_sockets[socket.id]]
+        } else {
+            console.log('Splicing.. ', socket.id)
+            connected_clients[connected_sockets[socket.id]].filter((value, index, arr) => {
+                if(value.id === socket.id) {
+                    console.log('Delete item ..', value.id, ':', socket.id)
+                    connected_clients[connected_sockets[socket.id]].splice(index, 1)
+                }
+            }) 
+
+            connected_clients[connected_sockets[socket.id]].forEach(e => {
+                console.log('Done...!', e.id)
+            })
+        }
+            
+        delete connected_sockets[socket.id]
+    })
 })
 
 

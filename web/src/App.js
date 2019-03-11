@@ -4,6 +4,7 @@ import GoogleLogin from 'react-google-login';
 
 let socket = require('socket.io-client')('http://localhost:3001');
 
+
 class App extends Component {
   constructor(props) {
     super(props)
@@ -15,15 +16,27 @@ class App extends Component {
           disk: undefined,
           memory: undefined,
           user: undefined,
-          ip: undefined
+          ip: undefined,
+          userID: 0
         }
       ]
     }
   }
 
   componentDidMount() {
+    socket.on('connected', () => {
 
+      if(this.state.userID !== undefined ) {
+        socket.emit('login', {
+            "googleId" : this.state.userID
+          },(response) => {
+            console.log(response)    
+          })
+      }
+    })
   }
+
+
 
   responseGoogle = (response) => {
     console.log(response);
@@ -34,7 +47,7 @@ class App extends Component {
         userID: response.googleId
       })
       
-      socket.emit('get_nodes', response, (response) => {
+      socket.emit('login', response, (response) => {
         console.log(response)
       })
 
