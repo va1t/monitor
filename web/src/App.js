@@ -56,7 +56,7 @@ class App extends Component {
         this.setState({
          nodes : data
         })
-        
+
       })
     }
   }
@@ -75,7 +75,7 @@ class App extends Component {
     return (
       <div className="App">
         <header className="App-header">
-          { this.state.userId ? this.renderLogin() : this.renderLogin()}
+          { this.state.userID ? '' : this.renderLogin() }
           Node Test <br />
           <ul>
             {

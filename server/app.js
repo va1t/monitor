@@ -49,7 +49,8 @@ app.post('/update_node', function(req, res) {
         disk : req.body.disk.percent,
         user : req.body.user,
         battery : req.body.battery,
-        uid : req.body.uid
+        uid : req.body.uid,
+        cpu: JSON.stringify(req.body.cpu.temps)
     }
 
     //console.log(JSON.stringify(values,null,2))
@@ -58,7 +59,7 @@ app.post('/update_node', function(req, res) {
         if(err) console.log(err)
         else {
             if(results.length >= 1) {
-                connection.query('UPDATE nodes SET memory = ?, disk = ?, battery = ?, user = ?, ip = ?, uid = ? WHERE id = ?', [values.memory, values.disk, values.battery, values.user, values.ip, values.uid, values.id], (err) => {
+                connection.query('UPDATE nodes SET memory = ?, disk = ?, battery = ?, user = ?, ip = ?, uid = ?, cpu = ? WHERE id = ?', [values.memory, values.disk, values.battery, values.user, values.ip, values.uid,  values.cpu, values.id], (err) => {
                     if(err) throw err;
                     else {
                         connection.query('SELECT * FROM nodes WHERE uid = ?', values.uid, (err, results) => {
