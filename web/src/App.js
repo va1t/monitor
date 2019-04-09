@@ -17,6 +17,7 @@ class App extends Component {
           memory: undefined,
           user: undefined,
           ip: undefined,
+          cpu: undefined,
           userID: 0
         }
       ]
@@ -52,13 +53,34 @@ class App extends Component {
       })
 
       socket.on(response.googleId, (data) => {
-        
+
         this.setState({
          nodes : data
         })
 
       })
     }
+  }
+
+  renderCPU(node) {
+
+    return (
+      <ul>
+        {
+         Object.keys(JSON.parse(node.cpu)).map((processor, index) => (
+           <li key={index} style={{'list-style': 'none'}}>{processor}<br/> 
+              <ul>
+              {
+                Object.keys(JSON.parse(node.cpu)[processor]).map((core, index) => (
+                  <li key={index} style={{'list-style': 'none'}}>{core}   :   {JSON.parse(node.cpu)[processor][core].value}&#176;C</li>
+                ))
+              }
+              </ul>
+           </li>
+         ))
+        }
+      </ul>
+    )
   }
 
   renderLogin () {
@@ -80,7 +102,7 @@ class App extends Component {
           <ul>
             {
               this.state.nodes.map(node => {
-                return <li key={node.id} style={{'list-style': 'none'}}> Node: {node.id} {node.battery === null || node.battery === undefined ? '' : 'Battery:'} {node.battery} {node.battery === null || node.battery === undefined ? '' : '%'} Disk: {node.disk} Memory: {node.memory}% User: {node.user} IP: {node.ip}</li>
+                return <li key={node.id} style={{'list-style': 'none'}}> Node: {node.id} {node.battery === null || node.battery === undefined ? '' : 'Battery:'} {node.battery} {node.battery === null || node.battery === undefined ? '' : '%'} Disk: {node.disk} Memory: {node.memory}% User: {node.user} IP: {node.ip} { node.cpu ? this.renderCPU(node) : ''}</li>
               })
             }
           </ul>

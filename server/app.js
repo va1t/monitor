@@ -129,7 +129,7 @@ io.on('connection', (socket) => {
     
     socket.on('disconnect', () => {
         console.log('Web Client Disconnected!')
-        if(connected_clients[connected_sockets[socket.id]].length <= 1 ) {
+        if(connected_clients[connected_sockets[socket.id]].length >= 1 ) {
             delete connected_clients[connected_sockets[socket.id]]
         } else {
             console.log('Splicing.. ', socket.id)
